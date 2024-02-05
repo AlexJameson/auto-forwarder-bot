@@ -23,7 +23,8 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     message = update.message
     words = message.text.split()
     hashtags = [word for word in words if word[0]=='#']
-    link = f"https://t.me/{SOURCE_CHANNEL}/{message.message_id}"
+    channel_id = SOURCE_CHANNEL.replace("@", "")
+    link = f"https://t.me/{channel_id}/{message.message_id}"
 
     # Ignore messages that contain only hashtags
     if len(words) == len(hashtags):
