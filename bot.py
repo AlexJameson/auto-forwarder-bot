@@ -3,7 +3,7 @@ import logging
 import os
 from dotenv import load_dotenv
 from telegram import Update
-from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters
+from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters, CommandHandler
 
 logging.basicConfig(level=logging.WARNING, 
                     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', 
@@ -63,23 +63,57 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
 
     if not target_received and hashtags:
         await context.bot.send_message(chat_id=TARGET_CHAT,
-                                    text=f"[Go to message]({link}) ↓",
+                                    text=f"a href='{link}'>Go to message</a> ↓",
                                     disable_web_page_preview=True,
-                                    parse_mode="MarkdownV2",
+                                    parse_mode="HTML",
                                     message_thread_id=30)
         await context.bot.forward_message(chat_id=TARGET_CHAT,
                                     from_chat_id=SOURCE_CHAT,
                                     message_thread_id=30,
-                                    # forwarding to the Support thread
                                     message_id=update.message.message_id)
+
+async def forward_message(update: Update, context: CallbackContext):
+    reply_to_message = update.message.reply_to_message
+    chat_id = SOURCE_CHAT.replace("@", "")
+    if reply_to_message:
+        link = f"https://t.me/{chat_id}/{reply_to_message.message_id}"
+        if reply_to_message.is_topic_message:
+            topic_id = reply_to_message.message_thread_id
+            link = f"https://t.me/{chat_id}/{topic_id}/{reply_to_message.message_id}"
+        if context.args:
+            for hashtag in context.args:
+                thread_id = HASHTAG_THREAD_MAP.get(hashtag, None)
+                if thread_id is not None:
+                    preceding_text = f"<a href='{link}'>Go to message</a> ↓\nHashtags: {', '.join(context.args)}"
+                    await context.bot.send_message(chat_id=TARGET_CHAT,
+                                    text=preceding_text,
+                                    disable_web_page_preview=True,
+                                    parse_mode="HTML",
+                                    message_thread_id=thread_id)
+                    await context.bot.forward_message(
+                        chat_id=TARGET_CHAT,
+                        from_chat_id=reply_to_message.chat_id,
+                        message_id=reply_to_message.message_id,
+                        message_thread_id=thread_id
+                    )
+        else:
+            await context.bot.send_message(
+                chat_id=update.message.chat_id,
+                text="Provide a valid hashtag with /save to forward it to the corresponding thread."
+            )
+
+    else:
+        await context.bot.send_message(
+            chat_id=update.message.chat_id,
+            text="Reply to a message with /save to forward it."
+        )
 
 def main():
     print("I'm working")
 
     application = ApplicationBuilder().token(TOKEN).build()
-
+    application.add_handler(CommandHandler("save", forward_message))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_hashtag_messages))
-
     application.run_polling()
 
 if __name__ == '__main__':
