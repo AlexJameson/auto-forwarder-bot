@@ -33,12 +33,13 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#']
     #chat_id = SOURCE_CHAT.replace("@", "")
-    chat_id = update.message.chat.id.replace("@", "")
-    link = f"https://t.me/{chat_id}/{message.message_id}"
+    numeric_chat_id = update.message.chat.id
+    chat_id = str(numeric_chat_id).replace("-100", "")
+    link = f"https://t.me/c/{chat_id}/{message.message_id}"
 
     if message.is_topic_message:
         topic_id = message.message_thread_id
-        link = f"https://t.me/{chat_id}/{topic_id}/{message.message_id}"
+        link = f"https://t.me/c/{chat_id}/{topic_id}/{message.message_id}"
 
     # Ignore messages that contain only hashtags
     if len(words) == len(hashtags) and message.caption is None:
@@ -56,7 +57,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                                     message_thread_id=thread_id)
             await context.bot.forward_message(
                 chat_id=TARGET_CHAT,
-                from_chat_id=chat_id,
+                from_chat_id=update.message.chat_id,
                 message_thread_id=thread_id,
                 message_id=update.message.message_id
             )
@@ -69,19 +70,20 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                                     parse_mode="HTML",
                                     message_thread_id=30)
         await context.bot.forward_message(chat_id=TARGET_CHAT,
-                                    from_chat_id=chat_id,
+                                    from_chat_id=update.message.chat_id,
                                     message_thread_id=30,
                                     message_id=update.message.message_id)
 
 async def forward_message(update: Update, context: CallbackContext):
     reply_to_message = update.message.reply_to_message
     #chat_id = SOURCE_CHAT.replace("@", "")
-    chat_id = update.message.chat.id.replace("@", "")
+    numeric_chat_id = reply_to_message.chat.id
+    chat_id = str(numeric_chat_id).replace("-100", "")
     if reply_to_message:
-        link = f"https://t.me/{chat_id}/{reply_to_message.message_id}"
+        link = f"https://t.me/c/{chat_id}/{reply_to_message.message_id}"
         if reply_to_message.is_topic_message:
             topic_id = reply_to_message.message_thread_id
-            link = f"https://t.me/{chat_id}/{topic_id}/{reply_to_message.message_id}"
+            link = f"https://t.me/c/{chat_id}/{topic_id}/{reply_to_message.message_id}"
         if context.args:
             for hashtag in context.args:
                 thread_id = HASHTAG_THREAD_MAP.get(hashtag, None)
@@ -94,7 +96,7 @@ async def forward_message(update: Update, context: CallbackContext):
                                     message_thread_id=thread_id)
                     await context.bot.forward_message(
                         chat_id=TARGET_CHAT,
-                        from_chat_id=reply_to_message.chat_id,
+                        from_chat_id=update.message.chat_id,
                         message_id=reply_to_message.message_id,
                         message_thread_id=thread_id
                     )
