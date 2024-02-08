@@ -13,7 +13,7 @@ logging.basicConfig(level=logging.WARNING,
 load_dotenv()
 
 TOKEN = os.getenv('FORWARDER_TOKEN')
-SOURCE_CHAT = os.getenv('SOURCE_CHAT_ID')
+#SOURCE_CHAT = os.getenv('SOURCE_CHAT_ID')
 TARGET_CHAT = os.getenv('TARGET_GROUP_ID')
 
 HASHTAG_THREAD_MAP = {
@@ -32,7 +32,8 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     if message.text:
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#']
-    chat_id = SOURCE_CHAT.replace("@", "")
+    #chat_id = SOURCE_CHAT.replace("@", "")
+    chat_id = update.message.chat.id.replace("@", "")
     link = f"https://t.me/{chat_id}/{message.message_id}"
 
     if message.is_topic_message:
@@ -55,7 +56,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                                     message_thread_id=thread_id)
             await context.bot.forward_message(
                 chat_id=TARGET_CHAT,
-                from_chat_id=SOURCE_CHAT,
+                from_chat_id=chat_id,
                 message_thread_id=thread_id,
                 message_id=update.message.message_id
             )
@@ -68,13 +69,14 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                                     parse_mode="HTML",
                                     message_thread_id=30)
         await context.bot.forward_message(chat_id=TARGET_CHAT,
-                                    from_chat_id=SOURCE_CHAT,
+                                    from_chat_id=chat_id,
                                     message_thread_id=30,
                                     message_id=update.message.message_id)
 
 async def forward_message(update: Update, context: CallbackContext):
     reply_to_message = update.message.reply_to_message
-    chat_id = SOURCE_CHAT.replace("@", "")
+    #chat_id = SOURCE_CHAT.replace("@", "")
+    chat_id = update.message.chat.id.replace("@", "")
     if reply_to_message:
         link = f"https://t.me/{chat_id}/{reply_to_message.message_id}"
         if reply_to_message.is_topic_message:
