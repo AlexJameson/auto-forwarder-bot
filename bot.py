@@ -26,11 +26,11 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     message = update.message
     words = ""
     hashtags = []
-    if not message.text:
-        words = message.caption.split()
-        hashtags = [word for word in words if word[0]=='#']
     if message.text:
         words = message.text.split()
+        hashtags = [word for word in words if word[0]=='#']
+    if not message.text:
+        words = message.caption.split()
         hashtags = [word for word in words if word[0]=='#']
     #chat_id = SOURCE_CHAT.replace("@", "")
     numeric_chat_id = update.message.chat.id
@@ -51,9 +51,9 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
         thread_id = HASHTAG_THREAD_MAP.get(tag, None)
         if thread_id is not None:
             await context.bot.send_message(chat_id=TARGET_CHAT,
-                                    text=f"[Go to message]({link}) ↓",
+                                    text=f"<a href='{link}'>Go to message</a> ↓",
                                     disable_web_page_preview=True,
-                                    parse_mode="MarkdownV2",
+                                    parse_mode="HTML",
                                     message_thread_id=thread_id)
             await context.bot.forward_message(
                 chat_id=TARGET_CHAT,
@@ -65,7 +65,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
 
     if not target_received and hashtags:
         await context.bot.send_message(chat_id=TARGET_CHAT,
-                                    text=f"a href='{link}'>Go to message</a> ↓",
+                                    text=f"<a href='{link}'>Go to message</a> ↓",
                                     disable_web_page_preview=True,
                                     parse_mode="HTML",
                                     message_thread_id=30)
