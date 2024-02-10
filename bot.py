@@ -26,7 +26,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     message = update.message
     words = ""
     hashtags = []
-    if message.text:
+    if message.text is not None:
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#']
     if not message.text:
