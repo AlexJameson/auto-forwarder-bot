@@ -103,7 +103,7 @@ async def forward_message(update: Update, context: CallbackContext):
         else:
             await context.bot.send_message(
                 chat_id=update.message.chat_id,
-                text="Provide a valid hashtag with /save to forward it to the corresponding thread."
+                text="Provide a valid hashtag with /save to forward a message to the corresponding thread."
             )
 
     else:
@@ -112,11 +112,47 @@ async def forward_message(update: Update, context: CallbackContext):
             text="Reply to a message with /save to forward it."
         )
 
+async def save_and_process(update: Update, context: CallbackContext):
+    reply_to_message = update.message.reply_to_message
+    numeric_chat_id = reply_to_message.chat.id
+    chat_id = str(numeric_chat_id).replace("-100", "")
+    if reply_to_message:
+        link = f"https://t.me/c/{chat_id}/{reply_to_message.message_id}"
+        if reply_to_message.is_topic_message:
+            topic_id = reply_to_message.message_thread_id
+            link = f"https://t.me/c/{chat_id}/{topic_id}/{reply_to_message.message_id}"
+        if context.args:
+            for hashtag in context.args:
+                thread_id = HASHTAG_THREAD_MAP.get(hashtag, None)
+                if thread_id is not None:
+                    user = reply_to_message.from_user
+                    user_display_name = f"{user.first_name} {user.last_name}"
+                    user_link = f"https://t.me/{user.username}"
+                    message_text = reply_to_message.text
+                    message_content = f"<b>Автор</b>: <a href='{user_link}'>{user_display_name}</a>\n\n<b>Сообщение</b>: {message_text}\n\n<b>Дополнительные теги</b>: {', '.join(context.args)}\n<a href='{link}'>Перейти к оригинальному сообщению</a>"
+                    await context.bot.send_message(chat_id=TARGET_CHAT,
+                                    text=message_content,
+                                    disable_web_page_preview=True,
+                                    parse_mode="HTML",
+                                    message_thread_id=thread_id)
+        else:
+            await context.bot.send_message(
+                chat_id=update.message.chat_id,
+                text="Provide a valid hashtag with /save to forward a message to the corresponding thread."
+            )
+
+    else:
+        await context.bot.send_message(
+            chat_id=update.message.chat_id,
+            text="Reply to a message with /save_and_process to forward and format it."
+        )
+
 def main():
     print("I'm working")
 
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("save", forward_message))
+    application.add_handler(CommandHandler("save_and_process", save_and_process))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_hashtag_messages))
     application.run_polling()
 
