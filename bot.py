@@ -129,9 +129,9 @@ async def save_and_process(update: Update, context: CallbackContext):
                     user_display_name = f"{user.first_name} {user.last_name}"
                     user_link = f"https://t.me/{user.username}"
                     message_text = reply_to_message.text
-                    message_content = f"<b>Автор</b>: <a href='{user_link}'>{user_display_name}</a>\n\n<b>Сообщение</b>: {message_text}\n\n<b>Дополнительные теги</b>: {', '.join(context.args)}\n<a href='{link}'>Перейти к оригинальному сообщению</a>"
+                    text_message_content = f"🟡 <a href='{user_link}'>{user_display_name}</a>\n\n{message_text}\n\n{' '.join(context.args)}\n<a href='{link}'>Открыть в чате</a>"
                     await context.bot.send_message(chat_id=TARGET_CHAT,
-                                    text=message_content,
+                                    text=text_message_content,
                                     disable_web_page_preview=True,
                                     parse_mode="HTML",
                                     message_thread_id=thread_id)
