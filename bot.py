@@ -16,6 +16,78 @@ load_dotenv()
 TOKEN = os.getenv('FORWARDER_TOKEN')
 TARGET_CHAT = os.getenv('TARGET_GROUP_ID')
 
+async def forward_and_process(update: Update, context: CallbackContext):
+    tw_chat_id="1978525172"
+    message = update.message
+    words = ""
+    hashtags = []
+    if message.text:
+        words = message.text.split()
+        hashtags = [word for word in words if word[0]=='#']
+    if not message.text:
+        words = message.caption.split()
+        hashtags = [word for word in words if word[0]=='#']
+    #numeric_chat_id = update.message.chat.id
+    #chat_id = str(numeric_chat_id).replace("-100", "")
+    link = f"https://t.me/c/{tw_chat_id}/{message.message_id}"
+    user = message.from_user
+    user_display_name = f"{user.first_name} {user.last_name}"
+    user_link = f"https://t.me/{user.username}"
+
+    if message.is_topic_message:
+        topic_id = message.message_thread_id
+        link = f"https://t.me/c/{tw_chat_id}/{topic_id}/{message.message_id}"
+
+    # Ignore messages that contain only hashtags
+    if len(words) == len(hashtags) and message.caption is None:
+         return
+
+    if message.text:
+        target_received = False
+
+        for tag in hashtags:
+            thread_id = HASHTAG_THREAD_MAP.get(tag, None)
+            if thread_id is not None:
+                message_text = message.text
+                text_message_content = f"🟡 <a href='{user_link}'>{user_display_name}</a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
+                await context.bot.send_message(chat_id=TARGET_CHAT,
+                                text=text_message_content,
+                                disable_web_page_preview=True,
+                                parse_mode="HTML",
+                                message_thread_id=thread_id)
+                target_received = True
+        if not target_received and hashtags:
+            message_text = message.text
+            text_message_content = f"🟡 <a href='{user_link}'>{user_display_name}</a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
+            await context.bot.send_message(chat_id=TARGET_CHAT,
+                           text=text_message_content,
+                           disable_web_page_preview=True,
+                           parse_mode="HTML",
+                           message_thread_id=30)
+    if not message.text:
+        message_text = message.caption
+        new_caption = f"🟡 <a href='{user_link}'>{user_display_name}</a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
+        target_received = False
+
+        for tag in hashtags:
+            thread_id = HASHTAG_THREAD_MAP.get(tag, None)
+            if thread_id is not None:
+                await context.bot.copy_message(chat_id=TARGET_CHAT,
+                                from_chat_id=message.chat_id,
+                                message_id=message.message_id,
+                                caption=new_caption,
+                                parse_mode="HTML",
+                                message_thread_id=thread_id)
+                target_received = True
+        if not target_received and hashtags:
+            await context.bot.copy_message(chat_id=TARGET_CHAT,
+                              from_chat_id=message.chat_id,
+                              message_id=message.message_id,
+                              caption=new_caption,
+                              parse_mode="HTML",
+                              message_thread_id=30)
+
+
 async def forward_hashtag_messages(update: Update, context: CallbackContext):
     message = update.message
     words = ""
@@ -209,6 +281,7 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("save", save_and_process))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND, forward_hashtag_messages))
+    application.add_handler(MessageHandler(filters.FORWARDED, forward_and_process))
     application.run_polling()
 
 if __name__ == '__main__':
