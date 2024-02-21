@@ -1,5 +1,4 @@
 HASHTAG_THREAD_MAP = {
-	# SUPPORT https://t.me/c/1978525172/1/17
 	# _adm https://t.me/c/1978525172/485/486
 	 '#чат': 485,
     '#админское': 485,
