@@ -100,7 +100,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     if message.text is not None:
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
-    if message.text is None:
+    if message.text is None and message.caption is not None:
         words = message.caption.split()
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     numeric_chat_id = update.message.chat.id
@@ -117,27 +117,24 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
         topic_id = message.message_thread_id
         link = f"https://t.me/c/{chat_id}/{topic_id}/{message.message_id}"
 
-    # Ignore messages that contain only hashtags
-    if len(words) == len(hashtags):
-         return
+    if len(words) == len(hashtags) and message.caption is None:
+        return
 
-    if message.text:
-        target_received = False
+    if message.text is not None:
         sent_to_topic = None
         message_text = message.text
         text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic and target_received is False:
+            if thread_id != sent_to_topic:
                 sent_to_topic = thread_id
                 await context.bot.send_message(chat_id=TARGET_CHAT,
                                 text=text_message_content,
                                 disable_web_page_preview=True,
                                 parse_mode="HTML",
                                 message_thread_id=thread_id)
-                target_received = True
-        if hashtags and target_received is False and sent_to_topic is None:
+        if hashtags and sent_to_topic is None:
             await context.bot.send_message(chat_id=TARGET_CHAT,
                            text=text_message_content,
                            disable_web_page_preview=True,
@@ -146,12 +143,11 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
     if message.text is None:
         message_text = message.caption
         new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
-        target_received = False
         sent_to_topic = None
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic and target_received is False:
+            if thread_id != sent_to_topic:
                 sent_to_topic = thread_id
                 await context.bot.copy_message(chat_id=TARGET_CHAT,
                                 from_chat_id=message.chat_id,
@@ -159,8 +155,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                                 caption=new_caption,
                                 parse_mode="HTML",
                                 message_thread_id=thread_id)
-                target_received = True
-        if not hashtags and target_received is False and sent_to_topic is None:
+        if not hashtags and sent_to_topic is None:
             await context.bot.copy_message(chat_id=TARGET_CHAT,
                               from_chat_id=message.chat_id,
                               message_id=message.message_id,
@@ -187,7 +182,6 @@ async def save_and_process(update: Update, context: CallbackContext):
             topic_id = reply_to_message.message_thread_id
             link = f"https://t.me/c/{chat_id}/{topic_id}/{reply_to_message.message_id}"
         if context.args:
-            #target_received = False
             sent_to_topic = None
             for hashtag in context.args:
                 thread_id = HASHTAG_THREAD_MAP.get(hashtag, None)
@@ -205,7 +199,6 @@ async def save_and_process(update: Update, context: CallbackContext):
                                         disable_web_page_preview=True,
                                         parse_mode="HTML",
                                         message_thread_id=thread_id)
-                        #target_received = True
                     if sent_to_topic is None:
                         await context.bot.send_message(chat_id=TARGET_CHAT,
                                        text=text_message_content,
