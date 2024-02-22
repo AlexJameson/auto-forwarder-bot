@@ -21,6 +21,7 @@ async def forward_and_process(update: Update, context: CallbackContext):
     message = update.message
     words = ""
     hashtags = []
+    link = "https://t.me/technicalwriters/"
     if message.text is not None:
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#']
@@ -41,28 +42,23 @@ async def forward_and_process(update: Update, context: CallbackContext):
     if message.text:
         target_received = False
         sent_to_topic = None
+        
+        message_text = message.text
+        if message.forward_origin.type == 'hidden_user':
+           text_message_content = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
+        if message.forward_origin.type != 'hidden_user':
+           text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
             if thread_id != sent_to_topic:
-                message_text = message.text
-                if message.forward_origin.sender_user is not None:
-                    text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}"
-                if message.forward_origin.type == 'hidden_user':
-                    text_message_content = f"🟡 <b>Unknown user</b>\n\n{message_text}"
+                sent_to_topic = thread_id
                 await context.bot.send_message(chat_id=TARGET_CHAT,
                                 text=text_message_content,
                                 disable_web_page_preview=True,
                                 parse_mode="HTML",
                                 message_thread_id=thread_id)
-                target_received = True
-                sent_to_topic = thread_id
-        if not target_received and hashtags:
-            message_text = message.text
-            if message.forward_origin.sender_user is not None:
-               text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}"
-            if message.forward_origin.sender_user is None:
-               text_message_content = f"🟡 <b>Unknown user</b>\n\n{message_text}"
+        if not target_received and hashtags and sent_to_topic is None:
             await context.bot.send_message(chat_id=TARGET_CHAT,
                            text=text_message_content,
                            disable_web_page_preview=True,
@@ -72,9 +68,9 @@ async def forward_and_process(update: Update, context: CallbackContext):
         message_text = message.caption
         new_caption = ""
         if message.forward_origin.type != 'hidden_user':
-            new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n{message_text}"
+            new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
         if message.forward_origin.type == 'hidden_user':
-            new_caption = f"🟡 <b>Unknown user</b>\n\n{message_text}"
+            new_caption = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
         target_received = False
         sent_to_topic = None
 
@@ -89,7 +85,7 @@ async def forward_and_process(update: Update, context: CallbackContext):
                                 message_thread_id=thread_id)
                 target_received = True
                 sent_to_topic = thread_id
-        if not target_received and hashtags:
+        if not target_received and hashtags and sent_to_topic is None:
             await context.bot.copy_message(chat_id=TARGET_CHAT,
                               from_chat_id=message.chat_id,
                               message_id=message.message_id,
