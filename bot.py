@@ -17,17 +17,26 @@ TOKEN = os.getenv('FORWARDER_TOKEN')
 TARGET_CHAT = os.getenv('TARGET_GROUP_ID')
 
 # The following method is designed to migrate the whole knowledge base. Not used in production.
-async def forward_and_process(update: Update, context: CallbackContext):
+async def forward_to_source(update: Update, context: CallbackContext):
     message = update.message
+    date = message.forward_origin.date
+    str_day = str(date.day)
+    if len(str_day) == 1:
+        str_day = f"0{str_day}"
+    str_month = str(date.month)
+    if len(str_month) == 1:
+        str_month = f"0{str_month}"
+    date_string = f"<b>Дата публикации:</b> {str_day}.{str_month}.{str(date.year)}"
+    link = "https://t.me/technicalwriters/"
     words = ""
     hashtags = []
-    link = "https://t.me/technicalwriters/"
     if message.text is not None:
         words = message.text.split()
-        hashtags = [word for word in words if word[0]=='#']
-    if message.text is None:
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 3]
+    if message.text is None and message.caption is not None:
         words = message.caption.split()
-        hashtags = [word for word in words if word[0]=='#']
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 3]
+
     if message.forward_origin.type != 'hidden_user':
         user = message.forward_origin.sender_user
         if user.last_name is not None:
@@ -40,43 +49,42 @@ async def forward_and_process(update: Update, context: CallbackContext):
         return
 
     if message.text:
-        target_received = False
         sent_to_topic = None
-        
-        message_text = message.text
+
+        message_text = message.text_html_urled
         if message.forward_origin.type == 'hidden_user':
-           text_message_content = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
+            text_message_content = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n{date_string}\n\n<a href='{link}'>Перейти в чат</a>"
         if message.forward_origin.type != 'hidden_user':
-           text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
+            text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n{date_string}\n\n<a href='{link}'>Перейти в чат</a>"
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic:
+            if thread_id != sent_to_topic and thread_id is not None:
                 sent_to_topic = thread_id
                 await context.bot.send_message(chat_id=TARGET_CHAT,
                                 text=text_message_content,
                                 disable_web_page_preview=True,
                                 parse_mode="HTML",
                                 message_thread_id=thread_id)
-        if not target_received and hashtags and sent_to_topic is None:
+        if hashtags and sent_to_topic is None:
             await context.bot.send_message(chat_id=TARGET_CHAT,
                            text=text_message_content,
                            disable_web_page_preview=True,
                            parse_mode="HTML",
                            message_thread_id=30)
     if not message.text:
-        message_text = message.caption
+        message_text = message.caption_html_urled
         new_caption = ""
         if message.forward_origin.type != 'hidden_user':
-            new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
+            new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n{date_string}\n\n<a href='{link}'>Перейти в чат</a>"
         if message.forward_origin.type == 'hidden_user':
-            new_caption = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n<a href='{link}'>Перейти в чат</a>"
+            new_caption = f"🟡 <b>Hidden user</b>\n\n{message_text}\n\n{date_string}\n\n<a href='{link}'>Перейти в чат</a>"
         target_received = False
         sent_to_topic = None
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic:
+            if thread_id != sent_to_topic and thread_id is not None:
                 await context.bot.copy_message(chat_id=TARGET_CHAT,
                                 from_chat_id=message.chat_id,
                                 message_id=message.message_id,
@@ -93,7 +101,7 @@ async def forward_and_process(update: Update, context: CallbackContext):
                               parse_mode="HTML",
                               message_thread_id=30)
 
-async def forward_hashtag_messages(update: Update, context: CallbackContext):
+async def forward_messages_automatically(update: Update, context: CallbackContext):
     message = update.message
     words = ""
     hashtags = []
@@ -122,12 +130,12 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
 
     if message.text is not None:
         sent_to_topic = None
-        message_text = message.text
+        message_text = message.text_html_urled
         text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic:
+            if thread_id != sent_to_topic and thread_id is not None:
                 sent_to_topic = thread_id
                 await context.bot.send_message(chat_id=TARGET_CHAT,
                                 text=text_message_content,
@@ -140,14 +148,14 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                            disable_web_page_preview=True,
                            parse_mode="HTML",
                            message_thread_id=30)
-    if message.text is None:
-        message_text = message.caption
+    elif message.text is None:
+        message_text = message.caption_html_urled
         new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
         sent_to_topic = None
 
         for tag in hashtags:
             thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-            if thread_id != sent_to_topic:
+            if thread_id != sent_to_topic and thread_id is not None:
                 sent_to_topic = thread_id
                 await context.bot.copy_message(chat_id=TARGET_CHAT,
                                 from_chat_id=message.chat_id,
@@ -163,7 +171,7 @@ async def forward_hashtag_messages(update: Update, context: CallbackContext):
                               parse_mode="HTML",
                               message_thread_id=30)
 
-async def save_and_process(update: Update, context: CallbackContext):
+async def save_manually(update: Update, context: CallbackContext):
     reply_to_message = update.message.reply_to_message
     numeric_chat_id = reply_to_message.chat.id
     chat_id = str(numeric_chat_id).replace("-100", "")
@@ -187,12 +195,11 @@ async def save_and_process(update: Update, context: CallbackContext):
                 thread_id = HASHTAG_THREAD_MAP.get(hashtag, None)
                 if reply_to_message.text is not None:
                 # Save text messages using the /save command with arguments
-                    words = reply_to_message.text.split()
-                    hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
-                    message_text = reply_to_message.text
+                    hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]
+                    message_text = reply_to_message.text_html_urled
                     text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n{' '.join(context.args)}\n\n<a href='{link}'>Открыть в чате</a>"
                         
-                    if thread_id != sent_to_topic:
+                    if thread_id != sent_to_topic and thread_id is not None:
                         sent_to_topic = thread_id
                         await context.bot.send_message(chat_id=TARGET_CHAT,
                                         text=text_message_content,
@@ -205,15 +212,12 @@ async def save_and_process(update: Update, context: CallbackContext):
                                        disable_web_page_preview=True,
                                        parse_mode="HTML",
                                        message_thread_id=30)
-                if reply_to_message.text is None:
+                if reply_to_message.text is None and reply_to_message.caption is not None:
                     # Process and copy messages without text using the /save command with arguments
-                    words = ""
-                    if reply_to_message.caption is not None:
-                        words = reply_to_message.caption.split()
-                    hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
-                    message_text = reply_to_message.caption
+                    hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]
+                    message_text = reply_to_message.caption_html_urled
                     new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n{' '.join(context.args)}\n\n<a href='{link}'>Открыть в чате</a>"
-                    if thread_id != sent_to_topic:
+                    if thread_id != sent_to_topic and thread_id is not None:
                         sent_to_topic = thread_id
                         await context.bot.copy_message(chat_id=TARGET_CHAT,
                                     from_chat_id=reply_to_message.chat_id,
@@ -228,18 +232,31 @@ async def save_and_process(update: Update, context: CallbackContext):
                                           caption=new_caption,
                                           parse_mode="HTML",
                                           message_thread_id=30)
+                elif reply_to_message.poll:
+                    hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]
+                    if thread_id != sent_to_topic and thread_id is not None:
+                        sent_to_topic = thread_id
+                        await context.bot.forward_message(chat_id=TARGET_CHAT,
+                                    from_chat_id=reply_to_message.chat_id,
+                                    message_id=reply_to_message.message_id,
+                                    message_thread_id=thread_id)
+                    if sent_to_topic is None:
+                        await context.bot.forward_message(chat_id=TARGET_CHAT,
+                                          from_chat_id=reply_to_message.chat_id,
+                                          message_id=reply_to_message.message_id,
+                                          message_thread_id=30)
         else:
             if reply_to_message.text is not None:
                 # Save text messages using the /save command without arguments
                 words = reply_to_message.text.split()
                 hashtags = [word for word in words if word[0]=='#']
-                message_text = reply_to_message.text
+                message_text = reply_to_message.text_html_urled
                 text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
                 sent_to_topic = None
 
                 for tag in hashtags:
                     thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-                    if thread_id != sent_to_topic:
+                    if thread_id != sent_to_topic  and thread_id is not None:
                         sent_to_topic = thread_id
                         await context.bot.send_message(chat_id=TARGET_CHAT,
                                         text=text_message_content,
@@ -256,13 +273,13 @@ async def save_and_process(update: Update, context: CallbackContext):
                 # Process and copy messages without text using the /save command with arguments
                 words = reply_to_message.caption.split()
                 hashtags = [word for word in words if word[0]=='#']
-                message_text = reply_to_message.caption
+                message_text = reply_to_message.caption_html_urled
                 new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
                 sent_to_topic = None
 
                 for tag in hashtags:
                     thread_id = HASHTAG_THREAD_MAP.get(tag, None)
-                    if thread_id != sent_to_topic:
+                    if thread_id != sent_to_topic and thread_id is not None:
                         sent_to_topic = thread_id
                         await context.bot.copy_message(chat_id=TARGET_CHAT,
                                         from_chat_id=reply_to_message.chat_id,
@@ -287,9 +304,9 @@ def main():
     print("I'm working")
 
     application = ApplicationBuilder().token(TOKEN).build()
-    application.add_handler(CommandHandler("save", save_and_process))
-    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_hashtag_messages))
-    application.add_handler(MessageHandler(filters.FORWARDED, forward_and_process))
+    application.add_handler(CommandHandler("save", save_manually))
+    application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_messages_automatically))
+    application.add_handler(MessageHandler(filters.FORWARDED, forward_to_source))
     application.run_polling()
 
 if __name__ == '__main__':
