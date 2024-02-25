@@ -13,10 +13,10 @@ Built using the `python-telegram-bot` library v20.8, tested and run on Ubuntu 22
 
 Basically, the bot listens to all messages in source groups, parses these messages to find hashtags, and then sends messages to each topic that corresponds to a message hashtags. The bot ignores messages in the following cases:
 
-1. A text message content consists only of hashtags (while it's a valid case for photos or document captions);
-1. Hashtags are shorter than 4 symbols including the hash symbol, like `#1` or `#hh`.
+1. A text message content consists only of hashtags without any other text (while it's a valid case for photos or document captions);
+1. Hashtags in the message are shorter than 4 symbols including the hash symbol, like `#1` or `#hh`.
 
-In case a message contains text content and hashtags but these hashtags don't correspond to any topics in the target group, the bot forwards this message to the *Miscellaneous* topic.
+In case a message contains valid hashtags and content but the hashtags don't correspond to any topics in the target group, the bot forwards this message to the *Miscellaneous* topic.
 
 For more information on this process, see [Hashtags and Topics](#hashtags-and-topics).
 
@@ -39,11 +39,11 @@ You can call the `/save` command either without arguments or pass any number of 
 
 The bot tries to map the hashtags received to the values from a from a [predefined dictionary](./hashtag_map.py). This dictionary contains hashtags and corresponding topic IDs. Hashtags are unique and serve as keys while the topic IDs can repeat so that a single topic can contain messages having several different hashtags.
 
-You don't need topic IDs until you want to contribute to the above mentioned dictionary. The bot accepts only hashtags as commands.
+You don't need topic IDs until you want to contribute to the above mentioned dictionary. The bot accepts only hashtags as command arguments.
 
 If a message has one or more hashtags that are not listed in the table below, and has no messages from the table, the bot sends such message to the *Miscellaneous* topic whose ID is `30`.
 
-The following table displays available hashtags and topics (in Russian):
+The following table displays available hashtags, topics, and topic IDs (in Russian):
 
 | Hashtag            |    Topic   | ID  |
 |--------------------|------------|-----|
