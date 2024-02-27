@@ -1,7 +1,5 @@
 # Auto Forwarder Bot
 
-[EN](README.md) | [RU](README_ru.md)
-
 This bot handles, processes, and forwards messages from a number of group chats to a single group chat to create some kind of a knowledge base. The bot automatically finds hashtags in messages sent to source chats, and forwards a message to one or more topic in the source group based on the hashtags found.
 
 Built using the `python-telegram-bot` library v20.8, tested and run on Ubuntu 22.04 with Python v3.11.4.

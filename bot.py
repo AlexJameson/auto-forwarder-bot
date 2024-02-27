@@ -163,7 +163,7 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
                                 caption=new_caption,
                                 parse_mode="HTML",
                                 message_thread_id=thread_id)
-        if not hashtags and sent_to_topic is None:
+        if hashtags and sent_to_topic is None:
             await context.bot.copy_message(chat_id=TARGET_CHAT,
                               from_chat_id=message.chat_id,
                               message_id=message.message_id,
