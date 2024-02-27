@@ -48,7 +48,7 @@ async def forward_to_source(update: Update, context: CallbackContext):
     if len(words) == len(hashtags) and message.caption is None:
         return
 
-    if message.text:
+    if message.text is not None:
         sent_to_topic = None
 
         message_text = message.text_html_urled
@@ -72,7 +72,7 @@ async def forward_to_source(update: Update, context: CallbackContext):
                            disable_web_page_preview=True,
                            parse_mode="HTML",
                            message_thread_id=30)
-    if not message.text:
+    elif message.caption is not None:
         message_text = message.caption_html_urled
         new_caption = ""
         if message.forward_origin.type != 'hidden_user':
@@ -108,7 +108,7 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     if message.text is not None:
         words = message.text.split()
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
-    if message.text is None and message.caption is not None:
+    elif message.caption is not None:
         words = message.caption.split()
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     numeric_chat_id = update.message.chat.id
@@ -117,7 +117,7 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     user = message.from_user
     if user.last_name is not None:
         user_display_name = f"{user.first_name} {user.last_name}"
-    if user.last_name is None:
+    elif user.last_name is None:
         user_display_name = f"{user.first_name}"
     user_link = f"https://t.me/{user.username}"
 
@@ -148,7 +148,7 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
                            disable_web_page_preview=True,
                            parse_mode="HTML",
                            message_thread_id=30)
-    elif message.text is None:
+    elif message.caption is not None:
         message_text = message.caption_html_urled
         new_caption = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
         sent_to_topic = None
@@ -180,7 +180,7 @@ async def save_manually(update: Update, context: CallbackContext):
         user = reply_to_message.from_user
         if user.last_name is not None:
             user_display_name = f"{user.first_name} {user.last_name}"
-        if user.last_name is None:
+        elif user.last_name is None:
             user_display_name = f"{user.first_name}"
         user_link = f"https://t.me/{user.username}"
         link = f"https://t.me/c/{chat_id}/{reply_to_message.message_id}"
