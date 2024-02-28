@@ -32,10 +32,10 @@ async def forward_to_source(update: Update, context: CallbackContext):
     hashtags = []
     if message.text is not None:
         words = message.text.split()
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 3]
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     if message.text is None and message.caption is not None:
         words = message.caption.split()
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 3]
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
 
     if message.forward_origin.type != 'hidden_user':
         user = message.forward_origin.sender_user
@@ -233,7 +233,7 @@ async def save_manually(update: Update, context: CallbackContext):
                                           parse_mode="HTML",
                                           message_thread_id=30)
                 elif reply_to_message.poll:
-                    hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]
+                    hashtags = [word for word in context.args if word[0]=='#' and  len(word) > 1]
                     if thread_id != sent_to_topic and thread_id is not None:
                         sent_to_topic = thread_id
                         await context.bot.forward_message(chat_id=TARGET_CHAT,
