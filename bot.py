@@ -129,9 +129,9 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     if len(words) == len(hashtags) and message.caption is None:
         return
 
-    if  is not None:
+    if message.text is not None:
         sent_to_topic = None
-        message_text = _html_urled
+        message_text = message.text_html_urled
         text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
 
         for tag in hashtags:
