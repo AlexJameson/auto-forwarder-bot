@@ -35,7 +35,7 @@ async def forward_to_source(update: Update, context: CallbackContext):
         words = re.split(r'\W+', message.text)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     if message.text is None and message.caption is not None:
-        words = message.caption.split()
+        words =  re.split(r'\W+', message.caption)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
 
     if message.forward_origin.type != 'hidden_user':
@@ -107,10 +107,10 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     words = ""
     hashtags = []
     if message.text is not None:
-        words = message.text.split()
+        words = re.split(r'\W+', message.text)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     elif message.caption is not None:
-        words = message.caption.split()
+        words = re.split(r'\W+', message.caption)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     numeric_chat_id = update.message.chat.id
     chat_id = str(numeric_chat_id).replace("-100", "")
@@ -129,9 +129,9 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     if len(words) == len(hashtags) and message.caption is None:
         return
 
-    if message.text is not None:
+    if  is not None:
         sent_to_topic = None
-        message_text = message.text_html_urled
+        message_text = _html_urled
         text_message_content = f"🟡 <a href='{user_link}'><b>{user_display_name}</b></a>\n\n{message_text}\n\n<a href='{link}'>Открыть в чате</a>"
 
         for tag in hashtags:
