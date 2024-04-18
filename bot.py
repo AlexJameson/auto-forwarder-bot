@@ -35,7 +35,7 @@ async def forward_to_source(update: Update, context: CallbackContext):
         words = re.split(r'\W+', message.text)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     if message.text is None and message.caption is not None:
-        words =  re.split(r'\W+', message.caption)
+        words = re.split(r'\W+', message.caption)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
 
     if message.forward_origin.type != 'hidden_user':
