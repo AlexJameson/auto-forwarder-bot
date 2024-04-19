@@ -32,11 +32,11 @@ async def forward_to_source(update: Update, context: CallbackContext):
     words = ""
     hashtags = []
     if message.text is not None:
-        words = re.split(r'\W+', message.text)
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
+        words = re.split(r'[^#\w-]+', message.text)
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 2]
     if message.text is None and message.caption is not None:
-        words = re.split(r'\W+', message.caption)
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
+        words = re.split(r'[^#\w-]+', message.caption)
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 2]
 
     if message.forward_origin.type != 'hidden_user':
         user = message.forward_origin.sender_user
@@ -107,11 +107,11 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     words = ""
     hashtags = []
     if message.text is not None:
-        words = re.split(r'\W+', message.text)
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
+        words = re.split(r'[^#\w-]+', message.text)
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 2]
     elif message.caption is not None:
-        words = re.split(r'\W+', message.caption)
-        hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
+        words = re.split(r'[^#\w-]+', message.caption)
+        hashtags = [word for word in words if word[0]=='#' and len(word) > 2]
     numeric_chat_id = update.message.chat.id
     chat_id = str(numeric_chat_id).replace("-100", "")
     link = f"https://t.me/c/{chat_id}/{message.message_id}"
