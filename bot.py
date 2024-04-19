@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import logging
 import os
+import re
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters, CommandHandler
@@ -31,10 +32,10 @@ async def forward_to_source(update: Update, context: CallbackContext):
     words = ""
     hashtags = []
     if message.text is not None:
-        words = message.text.split()
+        words = re.split(r'\W+', message.text)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     if message.text is None and message.caption is not None:
-        words = message.caption.split()
+        words = re.split(r'\W+', message.caption)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
 
     if message.forward_origin.type != 'hidden_user':
@@ -106,10 +107,10 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
     words = ""
     hashtags = []
     if message.text is not None:
-        words = message.text.split()
+        words = re.split(r'\W+', message.text)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     elif message.caption is not None:
-        words = message.caption.split()
+        words = re.split(r'\W+', message.caption)
         hashtags = [word for word in words if word[0]=='#' and len(word) > 1]
     numeric_chat_id = update.message.chat.id
     chat_id = str(numeric_chat_id).replace("-100", "")
