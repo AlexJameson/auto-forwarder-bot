@@ -2,7 +2,7 @@
 
 This bot handles, processes, and forwards messages from a number of group chats to a single group chat to create some kind of a knowledge base. The bot automatically finds hashtags in messages sent to source chats, and forwards a message to one or more topic in the source group based on the hashtags found.
 
-Built using the `python-telegram-bot` library v20.8, tested and run on Ubuntu 22.04 with Python v3.11.4.
+Built using the `python-telegram-bot` library v1, tested and run on Ubuntu 22.04 with Python v3.11.4.
 
 > [!NOTE]
 > This bot is developed for the technical writers community on Telegram and works in the [largest group](https://t.me/technicalwriters) of writers. The bot's settings prohibit anybody to add it to any other groups.
@@ -10,16 +10,16 @@ Built using the `python-telegram-bot` library v20.8, tested and run on Ubuntu 22
 ## Backlog
 
 1. Support media group forwarding https://github.com/python-telegram-bot/python-telegram-bot/wiki/Frequently-requested-design-patterns#how-do-i-deal-with-a-media-group
-  Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L131
-  And here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L215 (see also point 3 below)
-2. Prohibit any `/save` command arguments except hashtags. It should be impossible to type `/save sometext`. Only `/save #tag1 #tag2` should be allowed.
-  Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L197
-3. Research why saving images and files without any caption doesn't work properly when saving using the `/save` command with arguments 
-  Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L215
-4. Support regular expressions to search hashtags instead of `hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]`. 
-  Here and across the whole script https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L217C21-L217C97
+   Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L131
+   And here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L215 (see also point 3 below)
+2. Disallow any `/save` command arguments except hashtags. It should be impossible to type `/save sometext`. Only `/save #tag1 #tag2` should be allowed.
+   Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L197
+3. Research why saving images and files without any caption doesn't work properly when saving using the `/save` command with arguments
+   Here https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L215
+4. Support regular expressions to search hashtags instead of `hashtags = [word for word in context.args if word[0]=='#' and len(word) > 1]`.
+   Here and across the whole script https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L217C21-L217C97
 5. Add `.lowercase` to all entries of `thread_id = HASHTAG_THREAD_MAP.get(tag, None)` to ignore hashtag cases when sending messages to the target group.
-  Here and in other places https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L137
+   Here and in other places https://github.com/AlexJameson/auto-forwarder-bot/blob/main/bot.py#L137
 
 ## Usage
 
