@@ -303,7 +303,7 @@ async def save_manually(update: Update, context: CallbackContext):
 
 async def delete_status_message(update, context):
     try:
-        context.bot.delete_message(update.message.chat.id, update.message.message_id)
+        await context.bot.delete_message(update.message.chat.id, update.message.message_id)
     except TelegramError:
         pass
 
