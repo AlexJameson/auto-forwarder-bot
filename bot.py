@@ -4,6 +4,7 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters, CommandHandler
+from telegram.error import TelegramError
 from hashtag_map import HASHTAG_THREAD_MAP
 
 logging.basicConfig(level=logging.WARNING, 
@@ -300,12 +301,19 @@ async def save_manually(update: Update, context: CallbackContext):
             text="Чтобы переслать сообщение в базу знаний, ответьте на него командой /save."
         )
 
+async def delete_status_message(update, context):
+    try:
+        context.bot.delete_message(update.message.chat.id, update.message.message_id)
+    except TelegramError:
+        pass
+
 def main():
     print("I'm working")
 
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("save", save_manually))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_messages_automatically))
+    application.add_handler(MessageHandler(filters.StatusUpdate.ALL, delete_status_message))
     # application.add_handler(MessageHandler(filters.FORWARDED, forward_to_source))
     application.run_polling()
 
