@@ -302,7 +302,7 @@ async def save_manually(update: Update, context: CallbackContext):
         )
 
 async def delete_status_message(update, context):
-    await context.bot.delete_message(update.message.chat.id, update.message.message_id)
+    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
 def main():
     print("I'm working")
@@ -310,7 +310,7 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("save", save_manually))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_messages_automatically))
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.StatusUpdate.LEFT_CHAT_MEMBERS, delete_status_message))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS | filters.StatusUpdate.LEFT_CHAT_MEMBERS, delete_status_message))
     # application.add_handler(MessageHandler(filters.FORWARDED, forward_to_source))
     application.run_polling()
 
