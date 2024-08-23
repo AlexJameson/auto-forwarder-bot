@@ -4,7 +4,6 @@ import os
 from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CallbackContext, MessageHandler, filters, CommandHandler
-from telegram.error import TelegramError
 from hashtag_map import HASHTAG_THREAD_MAP
 
 logging.basicConfig(level=logging.WARNING, 
@@ -310,7 +309,7 @@ def main():
     application = ApplicationBuilder().token(TOKEN).build()
     application.add_handler(CommandHandler("save", save_manually))
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_messages_automatically))
-    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.StatusUpdate.LEFT_CHAT_MEMBERS, delete_status_message))
+    application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.StatusUpdate.LEFT_CHAT_MEMBER, delete_status_message))
     # application.add_handler(MessageHandler(filters.FORWARDED, forward_to_source))
     application.run_polling()
 
