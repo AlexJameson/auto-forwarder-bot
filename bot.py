@@ -311,7 +311,7 @@ def main():
     application.add_handler(MessageHandler(filters.ALL & ~filters.COMMAND & ~filters.FORWARDED, forward_messages_automatically))
     application.add_handler(MessageHandler(filters.StatusUpdate.NEW_CHAT_MEMBERS & filters.StatusUpdate.LEFT_CHAT_MEMBER, delete_status_message))
     # application.add_handler(MessageHandler(filters.FORWARDED, forward_to_source))
-    application.run_polling()
+    application.run_polling(allowed_updates=Update.ALL_TYPES)
 
 if __name__ == '__main__':
     main()
