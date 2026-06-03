@@ -18,7 +18,7 @@ TARGET_CHAT = os.getenv('TARGET_GROUP_ID')
 
 # The following method is designed to migrate the whole knowledge base. Not used in production.
 async def forward_to_source(update: Update, context: CallbackContext):
-    message = update.message
+    message = update.effective_message
     date = message.forward_origin.date
     str_day = str(date.day)
     if len(str_day) == 1:
@@ -102,7 +102,7 @@ async def forward_to_source(update: Update, context: CallbackContext):
                               message_thread_id=30)
 
 async def forward_messages_automatically(update: Update, context: CallbackContext):
-    message = update.message
+    message = update.effective_message
     words = ""
     hashtags = []
     if message.text is not None:
@@ -172,7 +172,7 @@ async def forward_messages_automatically(update: Update, context: CallbackContex
                               message_thread_id=30)
 
 async def save_manually(update: Update, context: CallbackContext):
-    reply_to_message = update.message.reply_to_message
+    reply_to_message = update.effective_message.reply_to_message
     numeric_chat_id = reply_to_message.chat.id
     chat_id = str(numeric_chat_id).replace("-100", "")
     link = ""
@@ -296,12 +296,12 @@ async def save_manually(update: Update, context: CallbackContext):
                                       message_thread_id=30)
     else:
         await context.bot.send_message(
-            chat_id=update.message.chat_id,
+            chat_id=update.effective_chat.id,
             text="Чтобы переслать сообщение в базу знаний, ответьте на него командой /save."
         )
 
 async def delete_status_message(update, context):
-    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.message.message_id)
+    await context.bot.delete_message(chat_id=update.effective_chat.id, message_id=update.effective_message.message_id)
 
 def main():
     print("I'm working")
